@@ -1,7 +1,7 @@
 {
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"title": "Event",
-	"description": "The Event model that is used in ActivityWatch",
+	"description": "The Event model that is used in KomuTracker",
 	"type": "object",
 	"required": ["timestamp"],
 	"properties": {

@@ -1,8 +1,8 @@
 {
-    "$id": "https://activitywatch.net/schemas/bucket.v0.json",
+    "$id": "https://komutracker.net/schemas/bucket.v0.json",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"title": "Bucket",
-	"description": "The Bucket model that is used in ActivityWatch",
+	"description": "The Bucket model that is used in KomuTracker",
 	"type": "object",
 	"required": ["id", "type", "client", "hostname"],
 	"properties": {

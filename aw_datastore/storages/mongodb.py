@@ -30,7 +30,7 @@ class MongoDBStorage(AbstractStorage):
         # If it isn't, it will raise pymongo.errors.ServerSelectionTimeoutError
         self.client.server_info()
 
-        self.db = self.client["activitywatch" + ("-testing" if testing else "")]
+        self.db = self.client["komutracker" + ("-testing" if testing else "")]
 
     def create_bucket(
         self,

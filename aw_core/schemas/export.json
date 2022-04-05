@@ -1,8 +1,8 @@
 {
-    "$id": "https://activitywatch.net/schemas/export.v0.json",
+    "$id": "https://komutracker.net/schemas/export.v0.json",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"title": "Export",
-	"description": "The Export model that is used by ActivityWatch",
+	"description": "The Export model that is used by KomuTracker",
 	"type": "object",
 	"required": [],
 	"properties": {

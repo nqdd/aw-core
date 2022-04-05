@@ -24,23 +24,23 @@ def _ensure_returned_path_exists(f: GetDirFunc) -> GetDirFunc:
 
 @_ensure_returned_path_exists
 def get_data_dir(module_name: Optional[str]) -> str:
-    data_dir = appdirs.user_data_dir("activitywatch")
+    data_dir = appdirs.user_data_dir("komutracker")
     return os.path.join(data_dir, module_name) if module_name else data_dir
 
 
 @_ensure_returned_path_exists
 def get_cache_dir(module_name: Optional[str]) -> str:
-    cache_dir = appdirs.user_cache_dir("activitywatch")
+    cache_dir = appdirs.user_cache_dir("komutracker")
     return os.path.join(cache_dir, module_name) if module_name else cache_dir
 
 
 @_ensure_returned_path_exists
 def get_config_dir(module_name: Optional[str]) -> str:
-    config_dir = appdirs.user_config_dir("activitywatch")
+    config_dir = appdirs.user_config_dir("komutracker")
     return os.path.join(config_dir, module_name) if module_name else config_dir
 
 
 @_ensure_returned_path_exists
 def get_log_dir(module_name: Optional[str]) -> str:  # pragma: no cover
-    log_dir = appdirs.user_log_dir("activitywatch")
+    log_dir = appdirs.user_log_dir("komutracker")
     return os.path.join(log_dir, module_name) if module_name else log_dir

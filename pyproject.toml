@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "aw-core"
 version = "0.5.9"
-description = "Core library for ActivityWatch"
+description = "Core library for KomuTracker"
 authors = ["Erik Bjäreholt <erik@bjareho.lt>", "Johan Bjäreholt <johan@bjareho.lt>"]
 license = "MPL-2.0"
 readme = "README.md"
-homepage = "https://activitywatch.net/"
-repository = "https://github.com/ActivityWatch/aw-core/"
-documentation = "https://docs.activitywatch.net/"
+homepage = "https://komutracker.net/"
+repository = "https://github.com/KomuTracker/aw-core/"
+documentation = "https://docs.komutracker.net/"
 packages = [
     { include = "aw_core" },
     { include = "aw_datastore" },
