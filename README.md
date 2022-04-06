@@ -1,7 +1,7 @@
 aw-core
 =======
 
-[![GitHub Actions badge](https://github.com/KomuTracker/aw-core/workflows/Build/badge.svg)](https://github.com/KomuTracker/aw-core/actions)
+[![GitHub Actions badge](https://github.com/nccasia/aw-core/workflows/Build/badge.svg)](https://github.com/nccasia/aw-core/actions)
 [![Code coverage](https://codecov.io/gh/KomuTracker/aw-core/branch/master/graph/badge.svg)](https://codecov.io/gh/KomuTracker/aw-core)
 [![PyPI](https://img.shields.io/pypi/v/aw-core)](https://pypi.org/project/aw-core/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -25,7 +25,7 @@ Run python with `LOG_LEVEL=debug` to use change the log level across all AW comp
 ## How to install
 
 To install the latest git version directly from github without cloning, run
-`pip install git+https://github.com/KomuTracker/aw-core.git`
+`pip install git+https://github.com/nccasia/aw-core.git`
 
 To install from a cloned version, cd into the directory and run
 `poetry install` to install inside an virtualenv. If you want to install it
