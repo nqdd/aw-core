@@ -55,8 +55,8 @@ class MongoDBStorage(AbstractStorage):
         self.db[bucket_id]["metadata"].insert_one(metadata)
 
     def delete_bucket(self, bucket_id: str) -> None:
-        print(self.db.collection_names())
-        if bucket_id + ".metadata" in self.db.collection_names():
+        print(self.db.list_collection_names())
+        if bucket_id + ".metadata" in self.db.list_collection_names():
             self.db[bucket_id]["events"].drop()
             self.db[bucket_id]["metadata"].drop()
         else:
