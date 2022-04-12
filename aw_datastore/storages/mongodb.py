@@ -116,6 +116,23 @@ class MongoDBStorage(AbstractStorage):
             events.append(event)
         return events
 
+    def get_event(
+        self,
+        bucket_id: str,
+        event_id: int,
+    ) -> Optional[Event]:
+        """
+        Fetch a single event from a bucket.
+        """
+        event = self.db[bucket_id]["events"].find_one({"_id": event_id})
+        if event:
+            event["id"] = str(event.pop("_id"))
+            # Required since MongoDB doesn't handle timezones
+            event["timestamp"] = event["timestamp"].replace(tzinfo=timezone.utc)
+            return Event(**event)
+        else:
+            return None
+    
     def get_eventcount(
         self, bucket_id: str, starttime: datetime = None, endtime: datetime = None
     ) -> int:
