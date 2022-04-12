@@ -65,7 +65,7 @@ class MongoDBStorage(AbstractStorage):
 
     def buckets(self) -> Dict[str, dict]:
         bucketnames = set()
-        for bucket_coll in self.db.collection_names():
+        for bucket_coll in self.db.list_collection_names():
             bucketnames.add(bucket_coll.split(".")[0])
         bucketnames.discard("system")  # Discard all system collections
         buckets = dict()
