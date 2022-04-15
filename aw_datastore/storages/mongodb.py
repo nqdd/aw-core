@@ -70,7 +70,7 @@ class MongoDBStorage(AbstractStorage):
             raise Exception("Bucket did not exist, could not delete")
     
     def buckets(self) -> Dict[str, dict]:
-        self.lock.acquire()
+        #self.lock.acquire()
         
         if time.time() - self.last_cached_ms < 300:
             return self.cached_buckets
@@ -86,7 +86,7 @@ class MongoDBStorage(AbstractStorage):
         self.cached_buckets = buckets
         self.last_cached_ms = time.time()
         
-        self.lock.release()
+        #self.lock.release()
 
         return buckets
 
