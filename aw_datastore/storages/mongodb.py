@@ -2,6 +2,8 @@ import logging
 from typing import List, Dict, Optional
 from datetime import datetime, timezone
 
+import time
+
 import iso8601
 
 # MongoDB
@@ -63,7 +65,15 @@ class MongoDBStorage(AbstractStorage):
             # TODO: Create custom exception
             raise Exception("Bucket did not exist, could not delete")
 
+    cached_buckets: Dict[str, dict] = {}
+    last_cached_ms = 0
     def buckets(self) -> Dict[str, dict]:
+        global cached_buckets
+        global last_cached_ms
+
+        if time.time() - last_cached_ms < 300:
+            return cached_buckets
+
         bucketnames = set()
         for bucket_coll in self.db.list_collection_names():
             bucketnames.add(bucket_coll[:bucket_coll.rfind('.')])
@@ -71,6 +81,10 @@ class MongoDBStorage(AbstractStorage):
         buckets = dict()
         for bucket_id in bucketnames:
             buckets[bucket_id] = self.get_metadata(bucket_id)
+        
+        cached_buckets = buckets
+        last_cached_ms = time.time()
+
         return buckets
 
     def get_metadata(self, bucket_id: str) -> dict:
