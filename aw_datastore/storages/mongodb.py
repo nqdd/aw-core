@@ -34,6 +34,9 @@ class MongoDBStorage(AbstractStorage):
 
         self.db = self.client["komutracker" + ("-testing" if testing else "")]
 
+        self.cached_buckets = None
+        self.last_cached_ms = 0
+
     def create_bucket(
         self,
         bucket_id: str,
@@ -64,15 +67,10 @@ class MongoDBStorage(AbstractStorage):
         else:
             # TODO: Create custom exception
             raise Exception("Bucket did not exist, could not delete")
-
-    cached_buckets: Dict[str, dict] = {}
-    last_cached_ms = 0
+    
     def buckets(self) -> Dict[str, dict]:
-        global cached_buckets
-        global last_cached_ms
-
-        if time.time() - last_cached_ms < 300:
-            return cached_buckets
+        if time.time() - self.last_cached_ms < 300:
+            return self.cached_buckets
 
         bucketnames = set()
         for bucket_coll in self.db.list_collection_names():
@@ -82,8 +80,8 @@ class MongoDBStorage(AbstractStorage):
         for bucket_id in bucketnames:
             buckets[bucket_id] = self.get_metadata(bucket_id)
         
-        cached_buckets = buckets
-        last_cached_ms = time.time()
+        self.cached_buckets = buckets
+        self.last_cached_ms = time.time()
 
         return buckets
 
