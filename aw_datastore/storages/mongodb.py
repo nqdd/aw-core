@@ -84,7 +84,7 @@ class MongoDBStorage(AbstractStorage):
         
         self.cached_buckets = buckets
         self.last_cached_ms = time.time()
-        lock.release()
+        self.lock.release()
 
         return buckets
 
