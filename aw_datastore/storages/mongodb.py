@@ -1,7 +1,7 @@
 import logging
 from typing import List, Dict, Optional
 from datetime import datetime, timezone
-
+import threading
 import time
 
 import iso8601
@@ -36,6 +36,7 @@ class MongoDBStorage(AbstractStorage):
 
         self.cached_buckets = None
         self.last_cached_ms = 0
+        self.lock = threading.Lock()
 
     def create_bucket(
         self,
@@ -72,6 +73,7 @@ class MongoDBStorage(AbstractStorage):
         if time.time() - self.last_cached_ms < 300:
             return self.cached_buckets
 
+        self.lock.acquire()
         bucketnames = set()
         for bucket_coll in self.db.list_collection_names():
             bucketnames.add(bucket_coll[:bucket_coll.rfind('.')])
@@ -82,6 +84,7 @@ class MongoDBStorage(AbstractStorage):
         
         self.cached_buckets = buckets
         self.last_cached_ms = time.time()
+        lock.release()
 
         return buckets
 
