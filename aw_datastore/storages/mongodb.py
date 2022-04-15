@@ -36,7 +36,7 @@ class MongoDBStorage(AbstractStorage):
 
         self.cached_buckets = None
         self.last_cached_ms = 0
-        self.lock = threading.Lock()
+        #self.lock = threading.Lock()
 
     def create_bucket(
         self,
@@ -72,7 +72,7 @@ class MongoDBStorage(AbstractStorage):
     def buckets(self) -> Dict[str, dict]:
         #self.lock.acquire()
         
-        if time.time() - self.last_cached_ms < 300:
+        if time.time() - self.last_cached_ms < 600:
             return self.cached_buckets
 
         bucketnames = set()
