@@ -67,6 +67,11 @@ class Datastore:
     def buckets(self):
         return self.storage_strategy.buckets()
 
+    def get_user(self, device_id: str):
+        return self.storage_strategy.get_user(device_id)
+    
+    def create_user(self, device_id: str, name: str, email: str):
+        return self.storage_strategy.insert_user(device_id, name, email)
 
 class Bucket:
     def __init__(self, datastore: Datastore, bucket_id: str) -> None:
