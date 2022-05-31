@@ -87,3 +87,11 @@ class AbstractStorage(metaclass=ABCMeta):
     @abstractmethod
     def replace_last(self, bucket_id: str, event: Event) -> None:
         raise NotImplementedError
+
+    @abstractmethod
+    def insert_user(self, device_id: str, user_name: str, user_email: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_user(self, device_id: str):
+        raise NotImplementedError  

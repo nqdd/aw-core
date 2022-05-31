@@ -9,6 +9,7 @@ import iso8601
 # MongoDB
 try:
     import pymongo
+    from bson import json_util
     from bson.objectid import ObjectId
 except ImportError:  # pragma: no cover
     logging.warning("Could not import pymongo, not available as a datastore backend")
@@ -79,6 +80,7 @@ class MongoDBStorage(AbstractStorage):
         for bucket_coll in self.db.list_collection_names():
             bucketnames.add(bucket_coll[:bucket_coll.rfind('.')])
         bucketnames.discard("system")  # Discard all system collections
+        bucketnames.discard("user")
         buckets = dict()
         for bucket_id in bucketnames:
             buckets[bucket_id] = self.get_metadata(bucket_id)
@@ -200,3 +202,20 @@ class MongoDBStorage(AbstractStorage):
         )
         event.id = event_id
         return True
+
+    def insert_user(self, device_id: str, user_name: str, user_email: str):
+        new_user = {
+            "name": user_name,
+            "email": user_email,
+            "device_id": device_id,
+            "createat": datetime.now()
+        }
+
+        self.db["users"].delete_many({"name": user_name})
+
+        self.db["users"].insert_one(new_user)
+
+        return new_user
+
+    def get_user(self, device_id: str):
+        return json_util.dumps(self.db["users"].find_one({"device_id": device_id}))
