@@ -89,9 +89,9 @@ class AbstractStorage(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def insert_user(self, device_id: str, user_name: str, user_email: str):
+    def save_user(self, user_data):
         raise NotImplementedError
 
     @abstractmethod
-    def get_user(self, device_id: str):
+    def get_user(self, filter):
         raise NotImplementedError  

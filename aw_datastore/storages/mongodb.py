@@ -37,6 +37,8 @@ class MongoDBStorage(AbstractStorage):
 
         self.cached_buckets = None
         self.last_cached_ms = 0
+        
+        self.db["users"].create_index('email', unique=True)
         #self.lock = threading.Lock()
 
     def create_bucket(
@@ -73,7 +75,7 @@ class MongoDBStorage(AbstractStorage):
     def buckets(self) -> Dict[str, dict]:
         #self.lock.acquire()
         
-        if time.time() - self.last_cached_ms < 600:
+        if time.time() - self.last_cached_ms < 6000:
             return self.cached_buckets
 
         bucketnames = set()
@@ -83,7 +85,10 @@ class MongoDBStorage(AbstractStorage):
         bucketnames.discard("user")
         buckets = dict()
         for bucket_id in bucketnames:
-            buckets[bucket_id] = self.get_metadata(bucket_id)
+            try:
+                buckets[bucket_id] = self.get_metadata(bucket_id)
+            except:
+                self.logger.error("Could not get metadata for bucket %s", bucket_id)
         
         self.cached_buckets = buckets
         self.last_cached_ms = time.time()
@@ -203,19 +208,15 @@ class MongoDBStorage(AbstractStorage):
         event.id = event_id
         return True
 
-    def insert_user(self, device_id: str, user_name: str, user_email: str):
-        new_user = {
-            "name": user_name,
-            "email": user_email,
-            "device_id": device_id,
-            "createat": datetime.now()
-        }
+    def save_user(self, user_data):
+        user_data["email"]
 
-        self.db["users"].delete_many({"name": user_name})
+        self.db["users"].delete_many({"email": user_data["email"]})
 
-        self.db["users"].insert_one(new_user)
+        self.db["users"].insert_one(user_data)
 
-        return new_user
+        return user_data
 
-    def get_user(self, device_id: str):
-        return json_util.dumps(self.db["users"].find_one({"device_id": device_id}))
+    def get_user(self, filter):
+        return json_util.dumps(self.db["users"].find_one(filter))
+    

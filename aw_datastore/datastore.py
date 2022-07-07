@@ -31,6 +31,7 @@ class Datastore:
         if bucket_id not in self.bucket_instances:
             # If the bucket exists in the database, create an object representation of it
             if bucket_id in self.buckets():
+                
                 bucket = Bucket(self, bucket_id)
                 self.bucket_instances[bucket_id] = bucket
             else:
@@ -67,11 +68,11 @@ class Datastore:
     def buckets(self):
         return self.storage_strategy.buckets()
 
-    def get_user(self, device_id: str):
-        return self.storage_strategy.get_user(device_id)
+    def get_user(self, filter):
+        return self.storage_strategy.get_user(filter)
     
-    def create_user(self, device_id: str, name: str, email: str):
-        return self.storage_strategy.insert_user(device_id, name, email)
+    def save_user(self, user_data):
+        return self.storage_strategy.save_user(user_data)
 
 class Bucket:
     def __init__(self, datastore: Datastore, bucket_id: str) -> None:
