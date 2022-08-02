@@ -73,6 +73,9 @@ class Datastore:
     
     def save_user(self, user_data):
         return self.storage_strategy.save_user(user_data)
+    
+    def get_all_users(self):
+        return self.storage_strategy.get_all_users()
 
 class Bucket:
     def __init__(self, datastore: Datastore, bucket_id: str) -> None:

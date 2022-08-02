@@ -221,3 +221,6 @@ class MongoDBStorage(AbstractStorage):
     def get_user(self, filter):
         return json_util.dumps(self.db["users"].find_one(filter))
     
+    def get_all_users(self):
+        return self.db["users"].find()
+    

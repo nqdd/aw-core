@@ -95,3 +95,7 @@ class AbstractStorage(metaclass=ABCMeta):
     @abstractmethod
     def get_user(self, filter):
         raise NotImplementedError  
+    
+    @abstractmethod
+    def get_all_users(self):
+        raise NotImplementedError
