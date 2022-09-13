@@ -15,7 +15,7 @@ from peewee import (
     ForeignKeyField,
     AutoField,
 )
-from playhouse.sqlite_ext import SqliteExtDatabase
+from playhouse.postgres_ext import *
 
 from aw_core.models import Event
 from aw_core.dirs import get_data_dir
@@ -32,7 +32,11 @@ peewee_logger.setLevel(logging.INFO)
 #   See: http://docs.peewee-orm.com/en/latest/peewee/database.html#run-time-database-configuration
 # Another option would be to use peewee's Proxy.
 #   See: http://docs.peewee-orm.com/en/latest/peewee/database.html#dynamic-db
-_db = SqliteExtDatabase(None)
+_db = PostgresqlExtDatabase(
+    'komutracker',  # Required by Peewee.
+    user='komutracker',  # Will be passed directly to psycopg2.
+    password='123123',  # Ditto.
+    host='172.16.100.177')  # Ditto.
 
 
 LATEST_VERSION = 2
@@ -53,6 +57,10 @@ def dt_plus_duration(dt, duration):
         "unixepoch",
     )
 
+def dt_plus_duration_postgres(dt, duration):
+    # See peewee docs on datemath: https://docs.peewee-orm.com/en/latest/peewee/hacks.html#date-math
+    return SQL(f"{dt} + make_interval(secs => {duration})")
+
 
 class BaseModel(Model):
     class Meta:
@@ -60,9 +68,12 @@ class BaseModel(Model):
 
 
 class BucketModel(BaseModel):
-    key = IntegerField(primary_key=True)
+    class Meta:
+        table_name = 'buckets'
+        
+    key = AutoField(primary_key=True)
     id = CharField(unique=True)
-    created = DateTimeField(default=datetime.now)
+    created = DateTimeTZField(default=datetime.now)
     name = CharField(null=True)
     type = CharField()
     client = CharField()
@@ -71,22 +82,44 @@ class BucketModel(BaseModel):
     def json(self):
         return {
             "id": self.id,
-            "created": iso8601.parse_date(self.created)
-            .astimezone(timezone.utc)
-            .isoformat(),
+            "created": "",
             "name": self.name,
             "type": self.type,
             "client": self.client,
             "hostname": self.hostname,
         }
 
+class UserModel(BaseModel):
+    class Meta:
+        table_name = 'users'
+
+    id = AutoField()
+    device_id = CharField()
+    name = CharField()
+    email = CharField(unique=True)
+    access_token = CharField(max_length=4096)
+    refresh_token = CharField(max_length=4096)
+
+    def json(self):
+        return {
+            "id": self.id,
+            "device_id": self.device_id,
+            "name": self.name,
+            "email": self.email,
+            "access_token": self.access_token,
+            "refresh_token": self.refresh_token,
+        }
+
 
 class EventModel(BaseModel):
+    class Meta:
+        table_name = 'events'
+
     id = AutoField()
     bucket = ForeignKeyField(BucketModel, backref="events", index=True)
-    timestamp = DateTimeField(index=True, default=datetime.now)
-    duration = DecimalField()
-    datastr = CharField()
+    timestamp = DateTimeTZField(index=True, default=datetime.now)
+    duration = IntervalField()
+    datastr = TextField()
 
     @classmethod
     def from_event(cls, bucket_key, event: Event):
@@ -94,7 +127,7 @@ class EventModel(BaseModel):
             bucket=bucket_key,
             id=event.id,
             timestamp=event.timestamp,
-            duration=event.duration.total_seconds(),
+            duration=f"S {event.duration.total_seconds()}",
             datastr=json.dumps(event.data),
         )
 
@@ -102,7 +135,7 @@ class EventModel(BaseModel):
         return {
             "id": self.id,
             "timestamp": self.timestamp,
-            "duration": float(self.duration),
+            "duration": self.duration,
             "data": json.loads(self.datastr),
         }
 
@@ -111,18 +144,18 @@ class PeeweeStorage(AbstractStorage):
     sid = "peewee"
 
     def __init__(self, testing: bool = True, filepath: str = None) -> None:
-        data_dir = get_data_dir("aw-server")
+        # data_dir = get_data_dir("aw-server")
 
-        if not filepath:
-            filename = (
-                "peewee-sqlite"
-                + ("-testing" if testing else "")
-                + f".v{LATEST_VERSION}"
-                + ".db"
-            )
-            filepath = os.path.join(data_dir, filename)
+        # if not filepath:
+            # filename = (
+            #     "peewee-sqlite"
+            #     + ("-testing" if testing else "")
+            #     + f".v{LATEST_VERSION}"
+            #     + ".db"
+            # )
+            # filepath = os.path.join(data_dir, filename)
         self.db = _db
-        self.db.init(filepath)
+        # self.db.init(filepath)
         logger.info(f"Using database file: {filepath}")
 
         self.db.connect()
@@ -130,6 +163,7 @@ class PeeweeStorage(AbstractStorage):
         self.bucket_keys: Dict[str, int] = {}
         BucketModel.create_table(safe=True)
         EventModel.create_table(safe=True)
+        UserModel.create_table(safe=True)
         self.update_bucket_keys()
 
     def update_bucket_keys(self) -> None:
@@ -199,7 +233,7 @@ class PeeweeStorage(AbstractStorage):
             {
                 "bucket": self.bucket_keys[bucket_id],
                 "timestamp": event.timestamp,
-                "duration": event.duration.total_seconds(),
+                "duration": f"S {event.duration.total_seconds()}",
                 "datastr": json.dumps(event.data),
             }
             for event in events
@@ -234,7 +268,7 @@ class PeeweeStorage(AbstractStorage):
     def replace_last(self, bucket_id, event):
         e = self._get_last(bucket_id)
         e.timestamp = event.timestamp
-        e.duration = event.duration.total_seconds()
+        e.duration = f"S {event.duration.total_seconds()}"
         e.datastr = json.dumps(event.data)
         e.save()
         event.id = e.id
@@ -251,7 +285,7 @@ class PeeweeStorage(AbstractStorage):
     def replace(self, bucket_id, event_id, event):
         e = self._get_event(bucket_id, event_id)
         e.timestamp = event.timestamp
-        e.duration = event.duration.total_seconds()
+        e.duration = f"S {event.duration.total_seconds()}"
         e.datastr = json.dumps(event.data)
         e.save()
         event.id = e.id
@@ -282,7 +316,7 @@ class PeeweeStorage(AbstractStorage):
 
             SELECT strftime(
               "%Y-%m-%d %H:%M:%f+00:00",
-              ((julianday(timestamp) - 2440587.5) * 86400),
+              ((to_date(timestamp - 2440587.5) * 86400),
               'unixepoch'
             )
             FROM eventmodel
@@ -292,15 +326,18 @@ class PeeweeStorage(AbstractStorage):
         """
         if limit == 0:
             return []
+        
+
         q = (
             EventModel.select()
             .where(EventModel.bucket == self.bucket_keys[bucket_id])
             .order_by(EventModel.timestamp.desc())
-            .limit(limit)
         )
 
-        q = self._where_range(q, starttime, endtime)
+        if limit > 0:
+            q = q.limit(limit)
 
+        q = self._where_range(q, starttime, endtime)
         res = q.execute()
         events = [Event(**e) for e in list(map(EventModel.json, res))]
 
@@ -348,9 +385,44 @@ class PeeweeStorage(AbstractStorage):
             # This can be slow on large databases...
             # Tried creating various indexes and using SQLite's unlikely() function, but it had no effect
             q = q.where(
-                starttime <= dt_plus_duration(EventModel.timestamp, EventModel.duration)
+                starttime <= EventModel.timestamp + EventModel.duration
             )
         if endtime:
             q = q.where(EventModel.timestamp <= endtime)
 
         return q
+
+    def _get_user_by_email(self, email) -> Optional[UserModel]:
+        try:
+            return (
+                UserModel.select()
+                .where(UserModel.email == email)
+                .get()
+            )
+        except peewee.DoesNotExist:
+            return None
+
+    def save_user(self, user_data):
+        UserModel.delete().where(UserModel.email == user_data['email'])
+
+        UserModel.create(
+            device_id=user_data["device_id"],
+            name=user_data["name"],
+            email=user_data['email'],
+            access_token=user_data["access_token"], 
+            refresh_token=user_data["refresh_token"]
+        )
+        return user_data
+
+    def get_user(self, filter):
+        user = self._get_user_by_email(filter["email"])
+        if user:
+            return self._get_user_by_email(filter["email"]).json()
+        return json.dumps({})
+    
+    def get_all_users(self):
+        users = UserModel.select()
+        result = []
+        for user in users:
+            result.append(user.json())
+        return result
