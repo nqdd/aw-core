@@ -72,9 +72,9 @@ class AbstractStorage(metaclass=ABCMeta):
     def insert_one(self, bucket_id: str, event: Event) -> Event:
         raise NotImplementedError
 
+    @abstractmethod
     def insert_many(self, bucket_id: str, events: List[Event]) -> None:
-        for event in events:
-            self.insert_one(bucket_id, event)
+        raise NotImplementedError
 
     @abstractmethod
     def delete(self, bucket_id: str, event_id: int) -> bool:
