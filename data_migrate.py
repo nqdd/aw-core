@@ -1,4 +1,3 @@
-from tkinter import E
 import aw_datastore
 from aw_datastore import Datastore
 import iso8601
@@ -48,7 +47,7 @@ def filterBuckets(bucket):
   except:
     return True
 migrate_buckets = filter(filterBuckets, mongo_buckets)
-migrate_buckets = [list(migrate_buckets)[0]]
+# migrate_buckets = [list(migrate_buckets)[0]]
 
 def mapEvent(event: Event):
   del event['id']
@@ -56,7 +55,7 @@ def mapEvent(event: Event):
 
 for bucket in migrate_buckets:
   try:
-    print(f"Start migrate bucket f{bucket}")
+    print(f"Start migrate bucket {bucket}")
     migrate_users_total += 1
     meta_data = mongo_buckets[bucket]
     postgres.create_bucket(bucket, 

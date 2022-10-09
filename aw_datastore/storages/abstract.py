@@ -99,3 +99,15 @@ class AbstractStorage(metaclass=ABCMeta):
     @abstractmethod
     def get_all_users(self):
         raise NotImplementedError
+
+    @abstractmethod
+    def get_use_tracker(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def save_report(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_report(self):
+        raise NotImplementedError

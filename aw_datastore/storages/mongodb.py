@@ -29,7 +29,7 @@ class MongoDBStorage(AbstractStorage):
         self.logger = logger.getChild(self.sid)
         configsection = "server" if not testing else "server-testing"
 
-        self.client = pymongo.MongoClient(serverSelectionTimeoutMS=5000)
+        self.client = pymongo.MongoClient('mongodb://172.16.110.8:27017/',serverSelectionTimeoutMS=5000)
         # Try to connect to the server to make sure that it's available
         # If it isn't, it will raise pymongo.errors.ServerSelectionTimeoutError
         self.client.server_info()
@@ -223,4 +223,12 @@ class MongoDBStorage(AbstractStorage):
     
     def get_all_users(self):
         return self.db["users"].find()
-    
+
+    def get_use_tracker(self, day=datetime.now().date()):
+        return None
+
+    def save_report(self, report_data):
+        return None
+
+    def get_report(self, email, day=datetime.now()):
+        return None

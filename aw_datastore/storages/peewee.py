@@ -1,5 +1,7 @@
+from email.policy import default
+import time
 from typing import Optional, List, Dict, Any
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 import json
 import os
 import logging
@@ -14,6 +16,8 @@ from peewee import (
     DateTimeField,
     ForeignKeyField,
     AutoField,
+    FloatField,
+    BooleanField
 )
 from playhouse.postgres_ext import *
 
@@ -21,6 +25,7 @@ from aw_core.models import Event
 from aw_core.dirs import get_data_dir
 
 from .abstract import AbstractStorage
+from playhouse.migrate import *
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +40,8 @@ peewee_logger.setLevel(logging.INFO)
 _db = PostgresqlExtDatabase(
     'komutracker',  # Required by Peewee.
     user='komutracker',  # Will be passed directly to psycopg2.
-    password='123123',  # Ditto.
-    host='172.16.100.177')  # Ditto.
+    password='1q2w#E$R',  # Ditto.
+    host='localhost')  # Ditto.
 
 
 LATEST_VERSION = 2
@@ -99,6 +104,7 @@ class UserModel(BaseModel):
     email = CharField(unique=True)
     access_token = CharField(max_length=4096)
     refresh_token = CharField(max_length=4096)
+    last_used_at = DateTimeTZField(null=True)
 
     def json(self):
         return {
@@ -108,6 +114,7 @@ class UserModel(BaseModel):
             "email": self.email,
             "access_token": self.access_token,
             "refresh_token": self.refresh_token,
+            "last_used_at": self.last_used_at
         }
 
 
@@ -139,6 +146,26 @@ class EventModel(BaseModel):
             "data": json.loads(self.datastr),
         }
 
+class ReportModel(BaseModel):
+    class Meta:
+        table_name = 'reports'
+    id = AutoField()
+    email = CharField()
+    spent_time = FloatField()
+    call_time = FloatField()
+    date = DateTimeTZField(index=True, default=datetime.now)
+    wfh = BooleanField()
+
+    def json(self):
+        return {
+            "id": self.id,
+            "email": self.email,
+            "spent_time": self.spent_time,
+            "call_time": self.call_time,
+            "date": self.date,
+            "wfh": self.wfh
+        }
+
 
 class PeeweeStorage(AbstractStorage):
     sid = "peewee"
@@ -164,14 +191,31 @@ class PeeweeStorage(AbstractStorage):
         BucketModel.create_table(safe=True)
         EventModel.create_table(safe=True)
         UserModel.create_table(safe=True)
+        ReportModel.create_table(safe=True)
+        
+        migrator = PostgresqlMigrator(self.db)
+        if any('last_used_at' == users_column.name for users_column in self.db.get_columns('users')):
+            pass
+        else:
+            migrate(migrator.add_column('users', 'last_used_at', DateTimeTZField(null=True)))
+        # migrate(migrator.drop_column('users', 'last_used_at'))
+
         self.update_bucket_keys()
+        self.cached_buckets = None
+        self.last_cached_ms = 0
 
     def update_bucket_keys(self) -> None:
         buckets = BucketModel.select()
         self.bucket_keys = {bucket.id: bucket.key for bucket in buckets}
 
     def buckets(self) -> Dict[str, Dict[str, Any]]:
+        # if time.time() - self.last_cached_ms < 60000:
+        #     print("cached")
+        #     return self.cached_buckets
+        # print("first time buckets")
         buckets = {bucket.id: bucket.json() for bucket in BucketModel.select()}
+        # self.cached_buckets = buckets
+        # self.last_cached_ms = time.time()
         return buckets
 
     def create_bucket(
@@ -343,6 +387,10 @@ class PeeweeStorage(AbstractStorage):
 
         # Trim events that are out of range (as done in aw-server-rust)
         # TODO: Do the same for the other storage methods
+        if starttime:
+            starttime = starttime.astimezone(timezone.utc)
+        if endtime:
+            endtime = endtime.astimezone(timezone.utc)
         for e in events:
             if starttime:
                 if e.timestamp < starttime:
@@ -354,6 +402,15 @@ class PeeweeStorage(AbstractStorage):
                     e.duration = endtime - e.timestamp
 
         return events
+
+    def get_last_event(self, bucket_id, day=datetime.now()):
+        event = (
+            EventModel.select()
+            .where((EventModel.bucket == self.bucket_keys[bucket_id]) & (peewee.fn.date_trunc('day', EventModel.timestamp) == day))
+            .order_by(EventModel.timestamp.desc())
+            .limit(1)
+        )
+        return event
 
     def get_eventcount(
         self,
@@ -403,15 +460,18 @@ class PeeweeStorage(AbstractStorage):
             return None
 
     def save_user(self, user_data):
-        UserModel.delete().where(UserModel.email == user_data['email'])
+        UserModel.delete().where(UserModel.email == user_data['email']).execute()
 
+        last_used_at = datetime.now(timezone.utc)
         UserModel.create(
             device_id=user_data["device_id"],
             name=user_data["name"],
             email=user_data['email'],
             access_token=user_data["access_token"], 
-            refresh_token=user_data["refresh_token"]
+            refresh_token=user_data["refresh_token"],
+            last_used_at=last_used_at
         )
+        user_data["last_used_at"] = last_used_at.isoformat()
         return user_data
 
     def get_user(self, filter):
@@ -426,3 +486,26 @@ class PeeweeStorage(AbstractStorage):
         for user in users:
             result.append(user.json())
         return result
+
+    def get_use_tracker(self, day=datetime.now().date()):
+        users = UserModel.select().where(peewee.fn.date_trunc('day', UserModel.last_used_at) == day)
+        result = []
+        for user in users:
+            result.append(user.json())
+        return result
+
+    def save_report(self, report_data):
+        ReportModel.create(
+            email = report_data["email"],
+            spent_time = report_data["spent_time"],
+            call_time = report_data["call_time"],
+            date = report_data["date"],
+            wfh = report_data["wfh"],
+        )
+        return report_data
+
+    def get_report(self, email, day=datetime.now()):
+        try:
+            return ReportModel.select().where((ReportModel.email == email) & (peewee.fn.date_trunc('day', EventModel.timestamp) == day)).get().json()
+        except peewee.DoesNotExist:
+            return None

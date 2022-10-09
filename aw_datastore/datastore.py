@@ -31,7 +31,6 @@ class Datastore:
         if bucket_id not in self.bucket_instances:
             # If the bucket exists in the database, create an object representation of it
             if bucket_id in self.buckets():
-                
                 bucket = Bucket(self, bucket_id)
                 self.bucket_instances[bucket_id] = bucket
             else:
