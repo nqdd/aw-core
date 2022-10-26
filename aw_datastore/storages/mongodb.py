@@ -28,7 +28,7 @@ class MongoDBStorage(AbstractStorage):
     def __init__(self, testing) -> None:
         self.logger = logger.getChild(self.sid)
 
-        self.client = pymongo.MongoClient(serverSelectionTimeoutMS=5000)
+        self.client = pymongo.MongoClient('mongodb://admin:password@mongodb:27017')
         # Try to connect to the server to make sure that it's available
         # If it isn't, it will raise pymongo.errors.ServerSelectionTimeoutError
         self.client.server_info()
