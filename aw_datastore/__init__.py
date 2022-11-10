@@ -15,6 +15,7 @@ def get_storage_methods() -> Dict[str, Callable[[Any], storages.AbstractStorage]
         PeeweeStorage.sid: PeeweeStorage,
         MemoryStorage.sid: MemoryStorage,
         SqliteStorage.sid: SqliteStorage,
+        MongoDBStorage.sid: MongoDBStorage
     }
 
     # MongoDB is not supported on Windows or macOS

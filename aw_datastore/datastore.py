@@ -67,11 +67,14 @@ class Datastore:
     def buckets(self):
         return self.storage_strategy.buckets()
 
-    def get_user(self, device_id: str):
-        return self.storage_strategy.get_user(device_id)
+    def get_user(self, filter):
+        return self.storage_strategy.get_user(filter)
     
-    def create_user(self, device_id: str, name: str, email: str):
-        return self.storage_strategy.insert_user(device_id, name, email)
+    def save_user(self, user_data):
+        return self.storage_strategy.save_user(user_data)
+    
+    def get_all_users(self):
+        return self.storage_strategy.get_all_users()
 
 class Bucket:
     def __init__(self, datastore: Datastore, bucket_id: str) -> None:

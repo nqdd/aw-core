@@ -72,9 +72,9 @@ class AbstractStorage(metaclass=ABCMeta):
     def insert_one(self, bucket_id: str, event: Event) -> Event:
         raise NotImplementedError
 
+    @abstractmethod
     def insert_many(self, bucket_id: str, events: List[Event]) -> None:
-        for event in events:
-            self.insert_one(bucket_id, event)
+        raise NotImplementedError
 
     @abstractmethod
     def delete(self, bucket_id: str, event_id: int) -> bool:
@@ -89,9 +89,25 @@ class AbstractStorage(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def insert_user(self, device_id: str, user_name: str, user_email: str):
+    def save_user(self, user_data):
         raise NotImplementedError
 
     @abstractmethod
-    def get_user(self, device_id: str):
+    def get_user(self, filter):
         raise NotImplementedError  
+    
+    @abstractmethod
+    def get_all_users(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_use_tracker(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def save_report(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_report(self):
+        raise NotImplementedError
