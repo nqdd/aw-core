@@ -13,6 +13,7 @@ from .sort_by import (
 from .split_url_events import split_url_events
 from .simplify import simplify_string
 from .flood import flood
+from .merge_events import merge_events
 from .classify import categorize, tag, Rule
 from .union_no_overlap import union_no_overlap
 
@@ -39,4 +40,5 @@ __all__ = [
     "filter_keyvals_regex",
     "split_url_events",
     "simplify_string",
+    "merge_events"
 ]
