@@ -15,6 +15,8 @@ def merge_events(events: List[Event]) -> List[Event]:
     """
     merged_events = []
     events.sort(key= lambda event: event.timestamp )
+    if not events:
+        return []
     cur_e_i = 0
     while cur_e_i < len(events) - 1:
         cur_event = events[cur_e_i]
