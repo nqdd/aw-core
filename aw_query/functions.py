@@ -17,6 +17,7 @@ from aw_transform import (
     tag,
     Rule,
     merge_events_by_keys,
+    merge_events,
     chunk_events_by_key,
     sort_by_timestamp,
     sort_by_duration,
@@ -185,6 +186,7 @@ def q2_filter_keyvals(events: list, key: str, vals: list) -> List[Event]:
     return filter_keyvals(events, key, vals, False)
 
 
+
 @q2_function(filter_keyvals)
 @q2_typecheck
 def q2_exclude_keyvals(events: list, key: str, vals: list) -> List[Event]:
@@ -219,6 +221,10 @@ def q2_limit_events(events: list, count: int) -> List[Event]:
     Merge functions
 """
 
+@q2_function(merge_events)
+@q2_typecheck
+def q2_merge_events(events: list) -> List[Event]:
+    return merge_events(events)
 
 @q2_function(merge_events_by_keys)
 @q2_typecheck

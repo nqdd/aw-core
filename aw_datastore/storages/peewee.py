@@ -488,7 +488,7 @@ class PeeweeStorage(AbstractStorage):
         return result
 
     def get_use_tracker(self, day=datetime.now().date()):
-        users = UserModel.select().where(peewee.fn.date_trunc('day', UserModel.last_used_at) == day)
+        users = UserModel.select().where(peewee.fn.date_trunc('day', UserModel.last_used_at) >= day)
         result = []
         for user in users:
             result.append(user.json())
@@ -506,6 +506,8 @@ class PeeweeStorage(AbstractStorage):
 
     def get_report(self, email, day=datetime.now()):
         try:
-            return ReportModel.select().where((ReportModel.email == email) & (peewee.fn.date_trunc('day', EventModel.timestamp) == day)).get().json()
+            report = ReportModel.select().where((ReportModel.email == email) & (peewee.fn.date_trunc('day', ReportModel.date) == day)).get().json()
+            report['active_time'] = report['spent_time'] + report['call_time']
+            return report
         except peewee.DoesNotExist:
             return None
