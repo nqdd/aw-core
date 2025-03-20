@@ -1,7 +1,7 @@
 .PHONY: build test benchmark typecheck typecheck-strict clean
 
 build:
-	poetry install
+	poetry install -vvv
 
 test:
 	python -m pytest tests -v --cov=aw_core --cov=aw_datastore --cov=aw_transform --cov=aw_query

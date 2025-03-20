@@ -29,12 +29,14 @@ strict-rfc3339 = "^0.7"
 tomlkit = "*"
 deprecation = "*"
 timeslot = "*"
+dill = "0.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0"
 pytest-cov = "*"
 mypy = "*"
-pylint = "^2.4.4"
+pylint = "2.4.4"
+dill= "0.2"
 black = "^22.1.0"
 
 [tool.poetry.extras]
